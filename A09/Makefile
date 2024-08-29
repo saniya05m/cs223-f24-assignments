@@ -1,15 +1,14 @@
 CC=gcc
-% :: %.c
-	$(CC) -g -Wall -Wvla -Werror $< -o $@ -lpthread -lm
+SOURCES=single_mandelbrot multi_mandelbrot
+FILES := $(subst .c,,$(SOURCES))
+FLAGS=-g -Wall -Wvla -Werror -Wno-unused-variable -Wno-unused-but-set-variable
 
-all: thread_mandelbrot  buddhabrot search
+# By default, make runs the first target in the file
+all: $(FILES)
 
-thread_mandelbrot: thread_mandelbrot.c read_ppm.c write_ppm.c
-	$(CC) -g -Wall -Wvla -Werror -Wno-unused-variable thread_mandelbrot.c read_ppm.c write_ppm.c -o $@ -lm -lpthread
+% :: %.c read_ppm.c write_ppm.c
+	$(CC) $(FLAGS) $< read_ppm.c write_ppm.c -o $@ -lpthread
 
-buddhabrot: buddhabrot.c read_ppm.c write_ppm.c
-	$(CC) -g -Wall -Wvla -Werror -Wno-unused-variable buddhabrot.c read_ppm.c write_ppm.c -o $@ -lm -lpthread
-
-clean: 
-	rm thread_mandelbrot buddhabrot search
+clean:
+	rm -rf $(FILES)
 

@@ -1,15 +1,14 @@
 CC=gcc
-% :: %.c
-	$(CC) -g -Wall -Wvla -Werror $< -o $@ -lm
+SOURCES=buddhabrot
+FILES := $(subst .c,,$(SOURCES))
+FLAGS=-g -Wall -Wvla -Werror -Wno-unused-variable -Wno-unused-but-set-variable
 
-all: memstats unit_tests
+# By default, make runs the first target in the file
+all: $(FILES)
 
-memstats: memstats.c mylloc_list.c sbrk.c rand.c
-	$(CC) -g -Wall -Wvla -Werror memstats.c mylloc_list.c sbrk.c rand.c -o $@ -lm
+% :: %.c read_ppm.c write_ppm.c
+	$(CC) $(FLAGS) $< read_ppm.c write_ppm.c -o $@ -lpthread
 
-unit_tests: unit_tests.c mylloc_list.c sbrk.c rand.c
-	$(CC) -g -Wall -Wvla -Werror unit_tests.c mylloc_list.c sbrk.c rand.c -o $@ -lm
-
-clean: 
-	rm memstats unit_tests
+clean:
+	rm -rf $(FILES)
 

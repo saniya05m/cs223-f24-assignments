@@ -1,14 +1,14 @@
 CC=gcc
-% :: %.c
-	$(CC) -g -Wall -Wvla -Werror $< -o $@
+SOURCES=crossword test_read test_write
+FILES := $(subst .c,,$(SOURCES))
+FLAGS=-g -Wall -Wvla -Werror -Wno-unused-variable -Wno-unused-but-set-variable
 
-all : crossword test_read test_write
+# By default, make runs the first target in the file
+all: $(FILES)
 
-test_read :: test_read.c read_ppm.c 
-	$(CC) -g -Wall -Wvla -Werror $< read_ppm.c -o $@
+% :: %.c read_ppm.c write_ppm.c
+	$(CC) $(FLAGS) $< read_ppm.c write_ppm.c -o $@
 
-test_write :: test_write.c read_ppm.c write_ppm.c
-	$(CC) -g -Wall -Wvla -Werror $< read_ppm.c write_ppm.c -o $@
+clean:
+	rm -rf $(FILES)
 
-clean :
-	rm crossword test_read test_write 2> /dev/null

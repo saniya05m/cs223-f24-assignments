@@ -1,15 +1,14 @@
 CC=gcc
-% :: %.c
-	$(CC) -g -Wall -Wvla -Werror $< -o $@ -lm
+SOURCES=search warmup
+FILES := $(subst .c,,$(SOURCES))
+FLAGS=-g -Wall -Wvla -Werror -Wno-unused-variable -Wno-unused-but-set-variable
 
-all: single_mandelbrot multi_mandelbrot warmup search
+# By default, make runs the first target in the file
+all: $(FILES)
 
-single_mandelbrot: single_mandelbrot.c read_ppm.c write_ppm.c
-	$(CC) -g -Wall -Wvla -Werror -Wno-unused-variable single_mandelbrot.c read_ppm.c write_ppm.c -o $@ -lm
+% :: %.c read_ppm.c write_ppm.c
+	$(CC) $(FLAGS) $< read_ppm.c write_ppm.c -o $@
 
-multi_mandelbrot: multi_mandelbrot.c read_ppm.c write_ppm.c
-	$(CC) -g -Wall -Wvla -Werror -Wno-unused-variable multi_mandelbrot.c read_ppm.c write_ppm.c -o $@ -lm
-
-clean: 
-	rm single_mandelbrot multi_mandelbrot search warmup
+clean:
+	rm -rf $(FILES)
 

@@ -1,14 +1,14 @@
 CC=gcc
-% :: %.c
-	$(CC) -g -Wall -Wvla -Werror $< -o $@
+SOURCES=bitmap decode encode
+FILES := $(subst .c,,$(SOURCES))
+FLAGS=-g -Wall -Wvla -Werror -Wno-unused-variable -Wno-unused-but-set-variable
 
-encode : encode.c read_ppm.c write_ppm.c
-	$(CC) -g -Wall -Wvla -Werror encode.c read_ppm.c write_ppm.c -o $@
+# By default, make runs the first target in the file
+all: $(FILES)
 
-decode : decode.c read_ppm.c write_ppm.c
-	$(CC) -g -Wall -Wvla -Werror decode.c read_ppm.c write_ppm.c -o $@
+% :: %.c read_ppm.c write_ppm.c
+	$(CC) $(FLAGS) $< read_ppm.c write_ppm.c -o $@
 
-all: encode decode bitmap
+clean:
+	rm -rf $(FILES)
 
-clean :
-	rm encode decode bitmap 2> /dev/null
