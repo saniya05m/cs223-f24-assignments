@@ -34,5 +34,6 @@ int main(int argc, char* argv[]) {
   printf("  Y range = [%.4f,%.4f]\n", ymin, ymax);
 
   // todo: your code here
+  // generate pallet
   // compute image
 }
