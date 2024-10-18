@@ -1,5 +1,5 @@
 CC=gcc
-SOURCES=thread_mandelbrot single_mandelbrot
+SOURCES=buddhabrot
 FILES := $(subst .c,,$(SOURCES))
 FLAGS=-g -Wall -Wvla -Werror -Wno-unused-variable -Wno-unused-but-set-variable
 
@@ -7,7 +7,7 @@ FLAGS=-g -Wall -Wvla -Werror -Wno-unused-variable -Wno-unused-but-set-variable
 all: $(FILES)
 
 % :: %.c read_ppm.c write_ppm.c
-	$(CC) $(FLAGS) $< read_ppm.c write_ppm.c -o $@
+	$(CC) $(FLAGS) $< read_ppm.c write_ppm.c -o $@ -lpthread
 
 clean:
 	rm -rf $(FILES)
