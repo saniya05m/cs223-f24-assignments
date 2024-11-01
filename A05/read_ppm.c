@@ -10,43 +10,37 @@
 
 // Choose *one* to implement (do not remove the other one!) 
 
+
 struct ppm_pixel* read_ppm(const char* filename, int* w, int* h) {
-  FILE *fp = fopen(filename, "r");
-  int maxVal;
-
-  if (!fp) {
-    printf("Cannot open file");
-     return NULL;
-  }
-
-  char magic[4];
-  fgets(magic, sizeof(magic), fp); // read the magic number 
-    
-  //skip everything from # to \n
-  char buffer;
-  buffer = fgetc(fp);
-  if(buffer=='#'){
-    do{
-      buffer = getc(fp);
-    }while(buffer!='\n');
-  }
-  ungetc(buffer,fp);
-  
-  // skip comments and read witdth, height, and max color value
-  fscanf(fp, "%d %d\n%d", w, h, &maxVal);
-  struct ppm_pixel *pixels = malloc((*w * *h) * sizeof(struct ppm_pixel));
-
-  //allocate memory for pixel data
-  if (!pixels) {
-    printf("Error: Unable to allocate memory!\n");
-    fclose(fp);
+  FILE *fp;
+  fp = fopen(filename, "rb");
+  if (fp == NULL) {
+    printf("Cannot open file: %s\n", filename);
     return NULL;
   }
 
-  //Read pixel data into the array
-  fread(pixels, sizeof(struct ppm_pixel),(*w * *h), fp);
+  char buffer[1024];
+  int width = 0;
+  int height = 0;
+  //skip title lines
+  fgets(buffer, 1024, fp);
+  fgets(buffer, 1024, fp);
+  while (buffer[0] == '#') {
+    fgets(buffer, 1024, fp);
+  }
+  
+  //read and store the width & height
+  sscanf(buffer, "%d%*c %d%*c", &width, &height);
+  //skip line with "255"
+  fgets(buffer, 1024, fp);
+
+  struct ppm_pixel* pxl = malloc(sizeof(struct ppm_pixel) * width * height);
+  fread(pxl, sizeof(struct ppm_pixel), (width * height), fp);
+
   fclose(fp);
-  return pixels;
+  *w = width;
+  *h = height;
+  return pxl;
 }
 
 struct ppm_pixel** read_ppm_2d(const char* filename, int* w, int* h) {
