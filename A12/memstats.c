@@ -1,3 +1,8 @@
+/*----------------------------------------------
+ * Author: Saniya Mukhambetkaliyeva
+ * Date: 12/06/2024
+ * Description: Program that outputs benchmark statistics about malloc
+ ---------------------------------------------*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -11,73 +16,99 @@
 #define LOOP 10
 
 struct chunk {
-  int size;
-  int used;
-  struct chunk *next;
+    int size;
+    int used;
+    struct chunk *next;
 };
 
-void memstats(struct chunk* freelist, void* buffer[], int len) {
-}
+void memstats(struct chunk *freelist, void *buffer[], int len) {
+    int totalBlocks = 0, usedBlocks = 0, freedBlocks = 0;
+    int totalMem = 0, usedMem = 0, freeMem = 0, unusedMem = 0;
 
-int main ( int argc, char* argv[]) {
-
-  printf("Starting test..\n");
-
-  srand(100);
-
-  double timer;
-  struct timeval tstart, tend;
-
-  gettimeofday(&tstart, NULL);
-
-  void *buffer[BUFFER];
-  for (int i = 0; i < BUFFER; i++) {
-    buffer[i] = NULL;
-  }
-
-  void *init = sbrk(0);
-  void *current;
-  printf("The initial top of the heap is %p.\n", init);
-  for (int j = 0 ; j < ROUNDS; j++) {
-    printf("---------------\n%d\n" , j);
-
-    for (int i= 0 ; i < LOOP ; i++) {
-      int index = rand() % BUFFER;
-      if (buffer[index] != NULL) {
-        free(buffer[index]);
-        buffer[index] = NULL;
-        printf("Freeing index %d\n", index);
-      } 
-      else {
-        size_t size = (size_t) randExp(8, 4000); 
-        int *memory = NULL;
-        memory = malloc(size);
-
-        if (memory == NULL) {
-          fprintf(stderr, "malloc failed\n");
-          return(1);
-        } 
-        *memory = 123;
-        buffer[index] = memory;
-        printf("Allocating %d bytes at index %d\n", (int) size, index);
-      }
+    for (int i = 0; i < len; ++i) {
+        if (buffer[i] != NULL) {
+            struct chunk *currentChunk = (struct chunk *)((struct chunk *)buffer[i] - 1);
+            totalMem += currentChunk->size;
+            unusedMem += currentChunk->size - currentChunk->used;
+            usedMem += currentChunk->size;
+            ++totalBlocks;
+        }
     }
-    extern struct chunk* flist;
-    current = sbrk(0);
-    int allocated = current - init;
-    init = current;
 
-    printf("The new top of the heap is %p.\n", current);
-    printf("Increased by %d (0x%x) bytes\n", allocated, allocated);
-    memstats(flist, buffer, BUFFER);
-  }
+    while (freelist != NULL) {
+        ++freedBlocks;
+        ++totalBlocks;
+        freeMem += freelist->size;
+        freelist = freelist->next;
+    }
 
-  for (int i = 0; i < BUFFER; i++) {
-    free(buffer[i]); 
-  }
-  gettimeofday(&tend, NULL);
-  timer = tend.tv_sec - tstart.tv_sec + (tend.tv_usec - tstart.tv_usec)/1.e6;
-  printf("Time is %g\n", timer);
+    usedBlocks = totalBlocks - freedBlocks;
 
-  return 0 ;
+    printf("Total blocks: %d Free blocks: %d Used blocks: %d\n", totalBlocks, freedBlocks, usedBlocks);
+    printf("Total memory allocated: %d Free memory: %d Used memory: %d\n", totalMem + freeMem, freeMem, usedMem);
+    printf("Underutilized memory: %0.2f\n", (float)unusedMem / totalMem);
 }
+
+int main(int argc, char *argv[]) {
+    printf("Starting test..\n");
+
+    srand(100);
+
+    struct timeval tstart, tend;
+    double timer;
+
+    gettimeofday(&tstart, NULL);
+
+    void *buffer[BUFFER] = {NULL};
+
+    void *initialHeapTop = sbrk(0);
+    void *currentHeapTop;
+
+    printf("The initial top of the heap is %p.\n", initialHeapTop);
+
+    for (int round = 0; round < ROUNDS; ++round) {
+        printf("---------------\n%d\n", round);
+
+        for (int iteration = 0; iteration < LOOP; ++iteration) {
+            int bufferIndex = rand() % BUFFER;
+
+            if (buffer[bufferIndex] != NULL) {
+                free(buffer[bufferIndex]);
+                buffer[bufferIndex] = NULL;
+                printf("Freeing index %d\n", bufferIndex);
+            } else {
+                size_t allocationSize = (size_t)randExp(8, 4000);
+                int *allocatedMemory = malloc(allocationSize);
+
+                if (allocatedMemory == NULL) {
+                    fprintf(stderr, "malloc failed\n");
+                    return 1;
+                }
+
+                *allocatedMemory = 123;
+                buffer[bufferIndex] = allocatedMemory;
+                printf("Allocating %d bytes at index %d\n", (int)allocationSize, bufferIndex);
+            }
+        }
+
+        extern struct chunk *flist;
+        currentHeapTop = sbrk(0);
+        int heapGrowth = (int)(currentHeapTop - initialHeapTop);
+        initialHeapTop = currentHeapTop;
+
+        printf("The new top of the heap is %p.\n", currentHeapTop);
+        printf("Increased by %d (0x%x) bytes\n", heapGrowth, heapGrowth);
+        memstats(flist, buffer, BUFFER);
+    }
+
+    for (int i = 0; i < BUFFER; ++i) {
+        free(buffer[i]);
+    }
+
+    gettimeofday(&tend, NULL);
+    timer = tend.tv_sec - tstart.tv_sec + (tend.tv_usec - tstart.tv_usec) / 1.e6;
+    printf("Time is %g\n", timer);
+
+    return 0;
+}
+
